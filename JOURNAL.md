@@ -18,4 +18,20 @@ The fix is a single-line change in one file (`api/routes/health.py`) with a clea
 
 **Setup confirmation:** [x] App runs locally at localhost:5173
 
-**Cohort ledger:** [ ] Issue added to cohort ledger
+**Cohort ledger:** [x] Issue added to cohort ledger
+
+---
+
+## Week 8 — Reproduction & solution planning
+
+**Reproduction commit link:** [link to commit — update after pushing]
+
+**Reproduction summary:**
+In `api/routes/health.py` line 22, `await db.execute("SELECT 1")` passes a bare Python string to SQLAlchemy 2.x's `execute()` method. SQLAlchemy 2.x requires all textual SQL to be wrapped in `sqlalchemy.text()` — passing a raw string raises `ArgumentError: Textual SQL expression 'SELECT 1' should be explicitly declared as text('SELECT 1')`. This is caught by the `except` block, which sets `health_status["dependencies"]["postgres"] = "unhealthy"` and causes the endpoint to return `503` even when the database is reachable.
+
+**PLAN.md link:** [link to PLAN.md — update after pushing]
+
+**Walkthrough video (recommended):** N/A
+
+**Blockers or open questions:**
+Need to inspect `tests/unit/api/test_health.py` to confirm whether the existing tests mock the DB session or use a live connection — this determines whether the fix will be automatically validated by the test suite or whether a new/updated test is needed.
