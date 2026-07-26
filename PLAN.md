@@ -2,6 +2,7 @@
 
 **Issue:** [Health check DB probe passes a raw SQL string, which fails under SQLAlchemy 2.x](https://github.com/ascherj/pathreview/issues/154)
 
+https://github.com/YugynDprodigy10/pathreview/commit/ea436cf292959fc6597f10e7d725d71ffbb76415
 ---
 
 ### Understand
