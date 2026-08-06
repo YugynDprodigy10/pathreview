@@ -24,14 +24,52 @@ The fix is a single-line change in one file (`api/routes/health.py`) with a clea
 
 ## Week 8 — Reproduction & solution planning
 
-**Reproduction commit link:** [link to commit — update after pushing]
+**Reproduction commit link:** https://github.com/YugynDprodigy10/pathreview/commit/ea436cf292959fc6597f10e7d725d71ffbb76415
 
 **Reproduction summary:**
 In `api/routes/health.py` line 22, `await db.execute("SELECT 1")` passes a bare Python string to SQLAlchemy 2.x's `execute()` method. SQLAlchemy 2.x requires all textual SQL to be wrapped in `sqlalchemy.text()` — passing a raw string raises `ArgumentError: Textual SQL expression 'SELECT 1' should be explicitly declared as text('SELECT 1')`. This is caught by the `except` block, which sets `health_status["dependencies"]["postgres"] = "unhealthy"` and causes the endpoint to return `503` even when the database is reachable.
 
-**PLAN.md link:** [link to PLAN.md — update after pushing]
+**PLAN.md link:** https://github.com/YugynDprodigy10/pathreview/blob/fix/154-health-check-raw-sql/PLAN.md
 
 **Walkthrough video (recommended):** N/A
 
 **Blockers or open questions:**
 Need to inspect `tests/unit/api/test_health.py` to confirm whether the existing tests mock the DB session or use a live connection — this determines whether the fix will be automatically validated by the test suite or whether a new/updated test is needed.
+
+---
+
+## Week 9 — Solution building & PR submission
+
+### Check-in 1 (mid-week)
+
+**Current progress:**
+Implemented the two-line fix in `api/routes/health.py`: added `from sqlalchemy import text` to the imports and changed `await db.execute("SELECT 1")` to `await db.execute(text("SELECT 1"))`. Confirmed no `test_health.py` existed in the unit test suite, so created `tests/unit/test_health.py` with 5 tests covering the core fix (TextClause type assertion), healthy path, unhealthy path, status field propagation, and execute call count.
+
+**Next steps:**
+Run `make check` and `make test-unit` to confirm the fix passes linting, formatting, type checking, and the new unit tests. Open a draft PR for early feedback, then finalize and submit.
+
+**Blockers:**
+Docker is not running locally, so `make test-integration` cannot be verified. Unit tests do not require Docker and run successfully.
+
+---
+
+### Check-in 2 (end of week)
+
+**PR link:** [paste your PR URL here after opening it]
+
+**Branch:** `fix/154-health-check-raw-sql`
+
+**What you built:**
+Added `from sqlalchemy import text` to `api/routes/health.py` and wrapped the PostgreSQL probe in `text("SELECT 1")`. This is a two-line change that makes the health check compatible with SQLAlchemy 2.x, which requires all textual SQL to be explicitly declared via `sqlalchemy.text()` rather than passed as bare strings. The database probe now executes correctly and reports accurate health status.
+
+**Tests added or updated:**
+Created `tests/unit/test_health.py` with 5 unit tests:
+- `test_postgres_probe_uses_sqlalchemy_text` — asserts execute() receives a `TextClause`, not a raw string (the core regression test)
+- `test_postgres_healthy_when_execute_succeeds` — verifies postgres reports "healthy" when probe completes
+- `test_postgres_unhealthy_when_execute_raises` — verifies 503 + "unhealthy" when probe fails
+- `test_postgres_failure_sets_overall_status_unhealthy` — verifies top-level status propagation
+- `test_postgres_execute_called_exactly_once` — verifies probe fires exactly once per request
+
+**Self-review confirmation:** [ ] make check passes  [ ] make test-unit passes
+
+**Draft PR feedback received from:** [name or "none"]
