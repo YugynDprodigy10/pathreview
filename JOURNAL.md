@@ -55,7 +55,7 @@ Docker is not running locally, so `make test-integration` cannot be verified. Un
 
 ### Check-in 2 (end of week)
 
-**PR link:** [paste your PR URL here after opening it]
+**PR link:** https://github.com/ascherj/pathreview/pull/995
 
 **Branch:** `fix/154-health-check-raw-sql`
 
@@ -70,6 +70,6 @@ Created `tests/unit/test_health.py` with 5 unit tests:
 - `test_postgres_failure_sets_overall_status_unhealthy` — verifies top-level status propagation
 - `test_postgres_execute_called_exactly_once` — verifies probe fires exactly once per request
 
-**Self-review confirmation:** [ ] make check passes  [ ] make test-unit passes
+**Self-review confirmation:** [x] make check passes  [x] make test-unit passes
 
 **Draft PR feedback received from:** [name or "none"]
