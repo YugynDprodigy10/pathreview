@@ -34,7 +34,7 @@ In `api/routes/health.py` line 22, `await db.execute("SELECT 1")` passes a bare 
 **Walkthrough video (recommended):** N/A
 
 **Blockers or open questions:**
-Need to inspect `tests/unit/api/test_health.py` to confirm whether the existing tests mock the DB session or use a live connection — this determines whether the fix will be automatically validated by the test suite or whether a new/updated test is needed.
+No `test_health.py` existed in the unit test suite — needed to write one from scratch following existing test patterns.
 
 ---
 
@@ -72,4 +72,37 @@ Created `tests/unit/test_health.py` with 5 unit tests:
 
 **Self-review confirmation:** [x] make check passes  [x] make test-unit passes
 
-**Draft PR feedback received from:** [name or "none"]
+**Draft PR feedback received from:** none
+
+---
+
+## Week 10 — Iteration & reflection
+
+### Reviewer feedback
+
+**Feedback received:** [ ] Yes  [x] No — still awaiting review
+
+**Summary of feedback:**
+No reviewer feedback came in during the week. Per the Su26 course note, reviewer feedback is not a feature in Summer 2026. PR #995 remains open.
+
+**How you responded:**
+N/A — no feedback to respond to.
+
+---
+
+### Reflection
+
+**What was harder than you expected?**
+Setting up the local environment was significantly harder than expected. The project required Python 3.11, Docker for PostgreSQL and Redis, and a frontend Node.js stack — none of which were immediately obvious from the README. The `pyproject.toml` license field format caused pip install failures that took time to diagnose, and the venv was initially created with the wrong Python version. In a real contribution scenario this would have been resolved faster with better documentation of prerequisites, but navigating it taught me that environment setup is a skill in itself, separate from the actual code change.
+
+**What did you learn about working in a large codebase?**
+The most important thing was learning to navigate before touching anything. The pathreview codebase spans multiple modules — `api`, `core`, `rag`, `agent`, `safety`, `ingestion` — and the health check route only made sense once I understood that `get_db` is a FastAPI dependency that injects an async SQLAlchemy session. Reading `core/database.py` and the route's dependency chain before writing any fix prevented me from making incorrect assumptions about what type `db` actually was. In my own projects I usually just know — in someone else's codebase you have to earn that knowledge by reading.
+
+**How did AI tools help — and where did they fall short?**
+AI tools were most useful for orientation: summarizing what each service file does, explaining the difference between SQLAlchemy 1.x and 2.x execute() behavior, and generating the initial test structure. They were less useful for environment debugging — the pip version conflicts and Python version issues required reading actual error messages and checking package compatibility tables, which AI suggestions sometimes got wrong or out of date. The test file required human judgment about what was worth testing (a TextClause type assertion rather than just checking execute was called) that a generic AI suggestion wouldn't have produced without the specific context of the bug.
+
+**What would you do differently if you started over?**
+I would read `docs/SETUP.md` more carefully before running `make setup`, specifically to check Docker and Python version prerequisites before creating the venv. I also would have checked how many other contributors had already claimed issue #154 before committing to it — by the time the PR was submitted, several other contributors had already opened PRs for the same issue, which means the fix may not get merged. Choosing a less-claimed issue from the same tier would have given the contribution a better chance of actually landing.
+
+**What are you most proud of from this module?**
+Writing `tests/unit/test_health.py` from scratch with no existing test to reference. The test file didn't exist, the health route uses FastAPI's dependency injection which complicates mocking, and the core assertion — checking that `execute()` receives a `TextClause` instance, not just that it was called — required understanding both SQLAlchemy's type system and the specific failure mode of the bug. All 5 tests passed on the first run, which meant the mocking approach was correct. That's the part of the contribution I'm most confident in.
